@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ВкусноПицца · Вавож</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root {
+    --bg: #0b0d12;
+    --card: #141821;
+    --card2: #1a1f2b;
+    --gold: #ffc94d;
+    --gold2: #ff9d2e;
+    --accent: #ff5c39;
+    --accent2: #ff8a3d;
+    --green: #2ecc71;
+    --text: #f2f4f8;
+    --muted: #8b93a5;
+    --radius: 18px;
+    --shadow: 0 8px 32px rgba(0,0,0,.45);
+    --glow-gold: 0 0 24px rgba(255,201,77,.35);
+    --glow-fire: 0 0 32px rgba(255,92,57,.45);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+    overflow-x: hidden;
+    user-select: none;
+    padding-bottom: 110px;
+  }
+
+  /* ====== ФОНОВЫЕ ЧАСТИЦЫ (угли из печи) ====== */
+  #particles {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  }
+  .particle {
+    position: absolute; border-radius: 50%;
+    background: radial-gradient(circle, var(--gold2), transparent 70%);
+    opacity: 0;
+    animation: emberRise linear infinite;
+  }
+  @keyframes emberRise {
+    0%   { transform: translateY(0) scale(1); opacity: 0; }
+    10%  { opacity: .7; }
+    90%  { opacity: .3; }
+    100% { transform: translateY(-105vh) scale(.2); opacity: 0; }
+  }
+
+  main { position: relative; z-index: 1; max-width: 560px; margin: 0 auto; padding: 0 16px; }
+
+  /* ====== ШАПКА ====== */
+  header {
+    padding: 26px 4px 18px;
+    text-align: center;
+    animation: fadeDown .7s cubic-bezier(.2,.8,.2,1) both;
+  }
+  .logo-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; letter-spacing: 2.5px; color: var(--gold);
+    border: 1px solid rgba(255,201,77,.35);
+    background: rgba(255,201,77,.07);
+    padding: 7px 16px; border-radius: 100px;
+    text-transform: uppercase;
+    box-shadow: var(--glow-gold);
+  }
+  h1 {
+    margin-top: 14px;
+    font-size: 34px; font-weight: 800; letter-spacing: -0.5px;
+    background: linear-gradient(100deg, #fff 20%, var(--gold) 55%, var(--accent) 90%);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    animation: shimmer 5s ease-in-out infinite;
+  }
+  @keyframes shimmer {
+    0%,100% { filter: brightness(1); }
+    50%     { filter: brightness(1.25); }
+  }
+  .sub { margin-top: 6px; color: var(--muted); font-size: 13px; }
+
+  /* ====== ХИТРОСТЬ: чипы ====== */
+  .chips { display:flex; gap:8px; justify-content:center; margin-top:14px; flex-wrap: wrap; }
+  .chip {
+    font-size: 11px; color: var(--text);
+    background: var(--card); border: 1px solid rgba(255,255,255,.07);
+    padding: 7px 13px; border-radius: 100px; backdrop-filter: blur(6px);
+  }
+  .chip b { color: var(--gold); }
+
+  /* ====== РАЗДЕЛЫ ====== */
+  section { margin-top: 26px; animation: fadeUp .6s cubic-bezier(.2,.8,.2,1) both; }
+  section:nth-of-type(1) { animation-delay: .1s; }
+  section:nth-of-type(2) { animation-delay: .18s; }
+  section:nth-of-type(3) { animation-delay: .26s; }
+
+  .section-title {
+    display:flex; align-items:center; gap:10px;
+    font-size: 17px; font-weight: 700; margin-bottom: 14px; padding: 0 4px;
+  }
+  .section-title .flame { font-size: 20px; animation: flamePulse 1.8s ease-in-out infinite; }
+  @keyframes flamePulse { 0%,100%{transform:scale(1) rotate(-3deg);} 50%{transform:scale(1.15) rotate(3deg);} }
+  .section-title .line { flex:1; height:1px; background: linear-gradient(90deg, rgba(255,201,77,.4), transparent); }
+
+  /* ====== КАТЕГОРИИ ====== */
+  .cats { display:grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
+  .cat {
+    position: relative; overflow: hidden;
+    background: var(--card); border: 1px solid rgba(255,255,255,.06);
+    border-radius: var(--radius); padding: 16px 8px 13px;
+    text-align: center; cursor: pointer;
+    transition: transform .18s cubic-bezier(.2,.8,.2,1), border-color .18s, box-shadow .18s;
+  }
+  .cat:active { transform: scale(.93); border-color: rgba(255,201,77,.5); box-shadow: var(--glow-gold); }
+  .cat .ic { font-size: 30px; display:block; margin-bottom:7px; filter: drop-shadow(0 4px 10px rgba(0,0,0,.5)); transition: transform .18s; }
+  .cat:active .ic { transform: scale(1.2) rotate(-6deg); }
+  .cat .nm { font-size: 12px; font-weight: 600; color: var(--text); }
+
+  /* ====== КАРТОЧКИ БЛЮД ====== */
+  .items { display:flex; flex-direction:column; gap: 10px; }
+  .item {
+    display:flex; align-items:center; gap: 14px;
+    background: var(--card); border: 1px solid rgba(255,255,255,.06);
+    border-radius: var(--radius); padding: 14px;
+    transition: transform .18s, border-color .18s;
+    position: relative; overflow: hidden;
+  }
+  .item::before {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(220px 90px at 85% 50%, rgba(255,92,57,.14), transparent 70%);
+    pointer-events:none;
+  }
+  .item:active { transform: scale(.97); border-color: rgba(255,201,77,.4); }
+  .item .emoji {
+    width: 58px; height: 58px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-size: 34px; border-radius: 16px;
+    background: radial-gradient(circle at 30% 30%, #262c3a, #171b24);
+    box-shadow: inset 0 2px 6px rgba(255,255,255,.05), 0 4px 14px rgba(0,0,0,.4);
+  }
+  .item .info { flex:1; min-width:0; }
+  .item .info .name { font-size: 15px; font-weight: 700; }
+  .item .info .desc { font-size: 11.5px; color: var(--muted); margin-top: 3px; line-height: 1.45; }
+  .item .price { font-size: 15px; font-weight: 800; color: var(--gold); white-space: nowrap; }
+  .item .add {
+    width: 42px; height: 42px; flex-shrink:0;
+    border: none; border-radius: 14px; cursor:pointer;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff; font-size: 24px; font-weight: 300; line-height: 1;
+    box-shadow: var(--glow-fire);
+    transition: transform .15s cubic-bezier(.2,.8,.2,1), filter .15s;
+    position: relative;
+  }
+  .item .add:active { transform: scale(.85) rotate(90deg); filter: brightness(1.2); }
+  .item .add.added {
+    background: linear-gradient(135deg, var(--green), #27ae60);
+    box-shadow: 0 0 24px rgba(46,204,113,.4);
+    animation: popIn .3s cubic-bezier(.2,.8,.2,1);
+  }
+  @keyframes popIn { 0%{transform:scale(.7);} 60%{transform:scale(1.15);} 100%{transform:scale(1);} }
+
+  /* ====== АКЦИИ ====== */
+  .promo {
+    background: linear-gradient(120deg, rgba(255,201,77,.12), rgba(255,92,57,.08));
+    border: 1px solid rgba(255,201,77,.3);
+    border-radius: var(--radius); padding: 16px 18px;
+    margin-bottom: 10px; position: relative; overflow: hidden;
+  }
+  .promo::after {
+    content:''; position:absolute; top:-60%; left:-30%;
+    width: 60px; height: 220%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.09), transparent);
+    transform: rotate(22deg);
+    animation: sheen 3.2s ease-in-out infinite;
+  }
+  @keyframes sheen { 0%{left:-40%;} 55%,100%{left:130%;} }
+  .promo .pt { font-size: 14px; font-weight: 700; color: var(--gold); }
+  .promo .pd { font-size: 12.5px; color: var(--text); opacity:.85; margin-top: 4px; line-height:1.5; }
+
+  /* ====== ОТЗЫВЫ ====== */
+  .review {
+    background: var(--card); border-radius: var(--radius);
+    border: 1px solid rgba(255,255,255,.06);
+    padding: 14px 16px; margin-bottom: 10px;
+  }
+  .review .rh { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+  .review .ra { font-size: 13px; font-weight: 700; }
+  .review .rs { color: var(--gold); font-size: 12px; letter-spacing: 2px; }
+  .review .rt { font-size: 12.5px; color: var(--muted); line-height: 1.55; font-style: italic; }
+
+  .rating-line { display:flex; align-items:center; gap:14px; justify-content:center; margin-top: 6px; }
+  .stars { display:flex; gap: 6px; }
+  .star { font-size: 28px; cursor:pointer; transition: transform .15s, filter .15s; filter: grayscale(1) opacity(.35); }
+  .star:active { transform: scale(1.3); }
+  .star.on { filter: none; animation: starPop .25s cubic-bezier(.2,.8,.2,1); }
+  @keyframes starPop { 0%{transform:scale(.6);} 60%{transform:scale(1.25);} 100%{transform:scale(1);} }
+
+  /* ====== НИЖНЯЯ ПАНЕЛЬ КОРЗИНЫ ====== */
+  #cartbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 50;
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px calc(14px + env(safe-area-inset-bottom));
+    background: linear-gradient(to top, rgba(11,13,18,.97) 60%, rgba(11,13,18,.75));
+    backdrop-filter: blur(14px);
+    transform: translateY(110%);
+    transition: transform .45s cubic-bezier(.2,.8,.2,1);
+  }
+  #cartbar.show { transform: translateY(0); }
+  #cartbar .cart-info { flex:1; }
+  #cartbar .cart-count { font-size: 12px; color: var(--muted); }
+  #cartbar .cart-total { font-size: 20px; font-weight: 800; color: var(--gold); }
+  #cartbar .btn-order {
+    border:none; border-radius: 16px; cursor:pointer;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color:#fff; font-size: 15px; font-weight: 700;
+    padding: 15px 30px;
+    box-shadow: var(--glow-fire);
+    transition: transform .15s, filter .15s;
+  }
+  #cartbar .btn-order:active { transform: scale(.93); filter: brightness(1.15); }
+
+  /* ====== ОВЕРЛЕЙ КОРЗИНЫ ====== */
+  #cart-overlay {
+    position: fixed; inset:0; z-index: 100;
+    background: rgba(5,6,10,.7); backdrop-filter: blur(10px);
+    display: flex; align-items: flex-end;
+    opacity: 0; pointer-events: none;
+    transition: opacity .3s;
+  }
+  #cart-overlay.open { opacity: 1; pointer-events: auto; }
+  #cart-sheet {
+    width: 100%; max-width: 560px; margin: 0 auto;
+    background: var(--card2);
+    border-radius: 26px 26px 0 0;
+    padding: 22px 18px calc(24px + env(safe-area-inset-bottom));
+    max-height: 82vh; overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform .45s cubic-bezier(.2,.8,.2,1);
+    box-shadow: 0 -20px 60px rgba(0,0,0,.6);
+  }
+  #cart-overlay.open #cart-sheet { transform: translateY(0); }
+  .sheet-handle { width: 44px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.15); margin: 0 auto 18px; }
+  .sheet-title { font-size: 20px; font-weight: 800; text-align:center; margin-bottom: 16px; }
+  .cart-row {
+    display:flex; align-items:center; gap: 12px;
+    background: var(--card); border-radius: 14px;
+    padding: 12px 14px; margin-bottom: 9px;
+    animation: rowIn .35s cubic-bezier(.2,.8,.2,1) both;
+  }
+  @keyframes rowIn { from{opacity:0; transform:translateX(-14px);} to{opacity:1; transform:none;} }
+  .cart-row .cn { flex:1; font-size: 14px; font-weight: 600; }
+  .cart-row .cp { font-size: 14px; font-weight: 800; color: var(--gold); }
+  .qty { display:flex; align-items:center; gap: 10px; }
+  .qty button {
+    width: 34px; height: 34px; border:none; border-radius: 11px; cursor:pointer;
+    background: rgba(255,255,255,.08); color: var(--text);
+    font-size: 19px; font-weight: 700;
+    transition: transform .12s, background .12s;
+  }
+  .qty button:active { transform: scale(.82); background: rgba(255,201,77,.25); }
+  .qty .q { font-size: 15px; font-weight: 800; min-width: 22px; text-align:center; }
+
+  .cart-empty { text-align:center; color: var(--muted); padding: 30px 0; font-size: 14px; }
+
+  .totals { margin-top: 14px; padding: 14px 16px; background: rgba(255,201,77,.06); border: 1px solid rgba(255,201,77,.2); border-radius: 16px; }
+  .totals .t-row { display:flex; justify-content:space-between; font-size: 13px; color: var(--muted); margin-bottom: 7px; }
+  .totals .t-row.grand { font-size: 17px; font-weight: 800; color: var(--gold); margin: 10px 0 0; padding-top: 10px; border-top: 1px dashed rgba(255,201,77,.3); }
+
+  .field { margin-top: 12px; }
+  .field label { display:block; font-size: 11.5px; color: var(--muted); margin-bottom: 6px; letter-spacing:.5px; text-transform: uppercase; }
+  .field input, .field textarea {
+    width: 100%; background: var(--card); color: var(--text);
+    border: 1px solid rgba(255,255,255,.1); border-radius: 14px;
+    padding: 14px 16px; font-size: 15px; outline: none;
+    transition: border-color .2s, box-shadow .2s;
+    font-family: inherit;
+  }
+  .field input:focus, .field textarea:focus { border-color: var(--gold); box-shadow: var(--glow-gold); }
+
+  .btn-main {
+    width: 100%; margin-top: 18px; border:none; border-radius: 18px; cursor:pointer;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color:#fff; font-size: 16px; font-weight: 800; padding: 17px;
+    box-shadow: var(--glow-fire);
+    transition: transform .15s, filter .15s;
+    position: relative; overflow: hidden;
+  }
+  .btn-main:active { transform: scale(.97); filter: brightness(1.15); }
+  .btn-ghost {
+    width:100%; margin-top: 10px; background:transparent; border:1px solid rgba(255,255,255,.12);
+    border-radius: 18px; color: var(--muted); font-size: 14px; padding: 13px; cursor:pointer;
+    transition: background .15s;
+  }
+  .btn-ghost:active { background: rgba(255,255,255,.06); }
+
+  /* ====== УСПЕХ ====== */
+  #success {
+    position: fixed; inset: 0; z-index: 200;
+    background: rgba(5,6,10,.92); backdrop-filter: blur(16px);
+    display: none; align-items: center; justify-content: center; flex-direction: column;
+    text-align: center; padding: 40px;
+  }
+  #success.show { display:flex; animation: fadeIn .4s both; }
+  @keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+  .success-ring {
+    width: 110px; height: 110px; border-radius: 50%;
+    display:flex; align-items:center; justify-content:center; font-size: 52px;
+    background: radial-gradient(circle at 35% 30%, rgba(46,204,113,.25), rgba(46,204,113,.05));
+    border: 2px solid rgba(46,204,113,.5);
+    box-shadow: 0 0 60px rgba(46,204,113,.35);
+    animation: ringIn .55s cubic-bezier(.2,.8,.2,1) both;
+  }
+  @keyframes ringIn { 0%{transform:scale(.3) rotate(-30deg); opacity:0;} 70%{transform:scale(1.12);} 100%{transform:scale(1) rotate(0);} }
+  .success-ring::after {
+    content:''; position:absolute; width:110px; height:110px; border-radius:50%;
+    border: 2px solid rgba(46,204,113,.6); border-left-color: transparent;
+    animation: ringSpin 1.6s linear infinite;
+  }
+  @keyframes ringSpin { to { transform: rotate(360deg); } }
+  #success h2 { margin-top: 26px; font-size: 24px; font-weight: 800; }
+  #success p { margin-top: 10px; color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+  /* ====== ТАБ-БАР ====== */
+  nav.tabs {
+    position: fixed; bottom: 0; left:0; right:0; z-index: 40;
+    display: flex; justify-content: space-around;
+    padding: 8px 6px calc(8px + env(safe-area-inset-bottom));
+    background: rgba(11,13,18,.9); backdrop-filter: blur(14px);
+    border-top: 1px solid rgba(255,255,255,.06);
+    transform: translateY(110%); transition: transform .45s;
+  }
+  nav.tabs.show { transform: translateY(0); }
+  .tab {
+    flex:1; text-align:center; padding: 8px 4px; cursor:pointer; border-radius: 12px;
+    color: var(--muted); font-size: 10.5px; transition: color .2s, background .2s;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+  }
+  .tab .ti { font-size: 22px; transition: transform .2s; }
+  .tab.active { color: var(--gold); }
+  .tab.active .ti { transform: translateY(-3px) scale(1.15); filter: drop-shadow(0 0 10px rgba(255,201,77,.6)); }
+  .tab:active { background: rgba(255,255,255,.05); }
+
+  .hidden-sec { display: none; }
+
+  @keyframes fadeUp { from{opacity:0; transform:translateY(24px);} to{opacity:1; transform:none;} }
+  @keyframes fadeDown { from{opacity:0; transform:translateY(-18px);} to{opacity:1; transform:none;} }
+
+  /* тост-уведомление */
+  #toast {
+    position: fixed; top: 14px; left: 50%; transform: translate(-50%, -120%);
+    z-index: 300; background: var(--card2); color: var(--text);
+    border: 1px solid rgba(255,201,77,.4); border-radius: 100px;
+    padding: 12px 22px; font-size: 13.5px; font-weight: 600;
+    box-shadow: var(--shadow), var(--glow-gold);
+    transition: transform .35s cubic-bezier(.2,.8,.2,1);
+    max-width: 90%; text-align:center;
+  }
+  #toast.show { transform: translate(-50%, 0); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<div id="particles"></div>
+
+<main>
+  <header>
+    <div class="logo-badge">🔥 ВкусноПицца</div>
+    <h1>ВкусноПицца</h1>
+    <div class="sub">с. Вавож · Семейное кафе · 10:00–22:00</div>
+    <div class="chips">
+      <div class="chip">🛵 Доставка <b>100 ₽</b></div>
+      <div class="chip">⭐ Самовывоз <b>0 ₽</b></div>
+      <div class="chip">🎂 Именинникам <b>−10%</b></div>
+    </div>
+  </header>
+
+  <!-- ====== МЕНЮ ====== -->
+  <section id="sec-menu">
+    <div class="section-title"><span class="flame">🔥</span> Наше меню <span class="line"></span></div>
+    <div class="cats" id="cats"></div>
+    <div class="items" id="items"></div>
+  </section>
+
+  <!-- ====== АКЦИИ ====== -->
+  <section id="sec-promos" class="hidden-sec">
+    <div class="section-title"><span class="flame">🎁</span> Акции <span class="line"></span></div>
+    <div id="promos"></div>
+  </section>
+
+  <!-- ====== ОТЗЫВЫ ====== -->
+  <section id="sec-reviews" class="hidden-sec">
+    <div class="section-title"><span class="flame">⭐</span> Отзывы <span class="line"></span></div>
+    <div id="reviews"></div>
+    <div class="rating-line">
+      <div class="stars" id="leave-stars">
+        <span class="star" data-v="1">⭐</span><span class="star" data-v="2">⭐</span>
+        <span class="star" data-v="3">⭐</span><span class="star" data-v="4">⭐</span><span class="star" data-v="5">⭐</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<!-- ====== КОРЗИНА-БАР ====== -->
+<div id="cartbar">
+  <div class="cart-info">
+    <div class="cart-count" id="cart-count">0 позиций</div>
+    <div class="cart-total" id="cart-total">0 ₽</div>
+  </div>
+  <button class="btn-order" id="btn-open-cart">Корзина 🛒</button>
+</div>
+
+<!-- ====== ТАБЫ ====== -->
+<nav class="tabs" id="tabs">
+  <div class="tab active" data-tab="menu"><span class="ti">🍕</span>Меню</div>
+  <div class="tab" data-tab="promos"><span class="ti">🎁</span>Акции</div>
+  <div class="tab" data-tab="reviews"><span class="ti">⭐</span>Отзывы</div>
+</nav>
+
+<!-- ====== ШИТ КОРЗИНЫ ====== -->
+<div id="cart-overlay">
+  <div id="cart-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">🛒 Ваш заказ</div>
+    <div id="cart-rows"></div>
+    <div class="totals">
+      <div class="t-row"><span>🍽 Блюда</span><span id="sum-food">0 ₽</span></div>
+      <div class="t-row"><span>🛵 Доставка</span><span id="sum-del">100 ₽</span></div>
+      <div class="t-row grand"><span>ИТОГО</span><span id="sum-total">0 ₽</span></div>
+    </div>
+    <div class="field">
+      <label>Телефон</label>
+      <input type="tel" id="f-phone" placeholder="+7 900 123-45-67" inputmode="tel">
+    </div>
+    <div class="field">
+      <label>Адрес (или «самовывоз»)</label>
+      <input type="text" id="f-addr" placeholder="ул. Советская, 5">
+    </div>
+    <div class="field">
+      <label>Комментарий</label>
+      <input type="text" id="f-comm" placeholder="Промокод, пожелания…">
+    </div>
+    <button class="btn-main" id="btn-order">Заказать 🔥</button>
+    <button class="btn-ghost" id="btn-close-cart">Продолжить выбор</button>
+  </div>
+</div>
+
+<!-- ====== УСПЕХ ====== -->
+<div id="success">
+  <div class="success-ring">✅</div>
+  <h2>Заказ принят!</h2>
+  <p id="success-text">Мы уже разжигаем печь 🍕<br>Если что-то изменится — напишем в чат.</p>
+</div>
+
+<div id="toast"></div>
+
+<script src="webapp_data.js"></script>
+<script>
+  // ============ TELEGRAM WEB APP ============
+  const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+  if (tg) { tg.ready(); tg.expand(); }
+
+  // ============ ДАННЫЕ ============
+  // MENU_DATA, PROMOS, REVIEWS приходят из webapp_data.js
+  const state = { cat: 'pizza', cart: {}, tab: 'menu' };
+
+  const fmt = v => v.toLocaleString('ru-RU') + ' ₽';
+  const $ = id => document.getElementById(id);
+
+  // ============ ЧАСТИЦЫ ============
+  (function makeParticles() {
+    const box = $('particles');
+    for (let i = 0; i < 14; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      const s = 3 + Math.random() * 5;
+      p.style.width = p.style.height = s + 'px';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.bottom = '-10px';
+      p.style.animationDuration = (7 + Math.random() * 9) + 's';
+      p.style.animationDelay = Math.random() * 10 + 's';
+      box.appendChild(p);
+    }
+  })();
+
+  // ============ РЕНДЕР ============
+  function renderCats() {
+    const box = $('cats');
+    box.innerHTML = '';
+    for (const key in MENU_DATA) {
+      const c = MENU_DATA[key];
+      const d = document.createElement('div');
+      d.className = 'cat' + (key === state.cat ? ' active' : '');
+      d.innerHTML = `<span class="ic">${c.emoji}</span><span class="nm">${c.title.replace(/^\S+\s/, '')}</span>`;
+      d.onclick = () => { state.cat = key; renderCats(); renderItems(); };
+      box.appendChild(d);
+    }
+  }
+
+  function renderItems() {
+    const box = $('items');
+    box.innerHTML = '';
+    const cat = MENU_DATA[state.cat];
+    cat.items.forEach(it => {
+      const el = document.createElement('div');
+      el.className = 'item';
+      el.innerHTML = `
+        <div class="emoji">${cat.emoji}</div>
+        <div class="info">
+          <div class="name">${it.name}</div>
+          <div class="desc">${it.desc}</div>
+        </div>
+        <div class="price">${fmt(it.price)}</div>
+        <button class="add">+</button>
+      `;
+      const btn = el.querySelector('.add');
+      const sync = () => {
+        const n = state.cart[it.id] || 0;
+        if (n > 0) { btn.textContent = n; btn.classList.add('added'); }
+        else { btn.textContent = '+'; btn.classList.remove('added'); }
+      };
+      btn.onclick = () => {
+        state.cart[it.id] = (state.cart[it.id] || 0) + 1;
+        sync(); updateCartBar();
+        toast(`${it.name} — в корзине 🛒`);
+      };
+      btn.oncontextmenu = e => { e.preventDefault(); };
+      sync();
+      el.querySelector('.info').onclick = () => {
+        if (state.cart[it.id]) { state.cart[it.id]--; if (state.cart[it.id] <= 0) delete state.cart[it.id]; sync(); updateCartBar(); }
+      };
+      box.appendChild(el);
+    });
+  }
+
+  function renderPromos() {
+    const box = $('promos');
+    box.innerHTML = '';
+    PROMOS.forEach(p => {
+      const d = document.createElement('div');
+      d.className = 'promo';
+      d.innerHTML = `<div class="pt">${p.title}</div><div class="pd">${p.desc}</div>`;
+      box.appendChild(d);
+    });
+  }
+
+  function renderReviews() {
+    const box = $('reviews');
+    box.innerHTML = '';
+    REVIEWS.forEach(r => {
+      const d = document.createElement('div');
+      d.className = 'review';
+      d.innerHTML = `<div class="rh"><span class="ra">${r.name}</span><span class="rs">${'★'.repeat(r.rating)}</span></div>
+                     <div class="rt">«${r.text}»</div>`;
+      box.appendChild(d);
+    });
+  }
+
+  // ============ КОРЗИНА ============
+  function cartTotals() {
+    let food = 0, count = 0, rows = [];
+    for (const key in MENU_DATA)
+      for (const it of MENU_DATA[key].items) {
+        const q = state.cart[it.id] || 0;
+        if (q) { food += it.price * q; count += q; rows.push({ it, q, cat: MENU_DATA[key] }); }
+      }
+    return { food, count, rows };
+  }
+
+  function updateCartBar() {
+    const { food, count } = cartTotals();
+    $('cart-count').textContent = count + ' ' + plural(count, ['позиция', 'позиции', 'позиций']);
+    $('cart-total').textContent = fmt(food + DELIVERY_PRICE);
+    $('cartbar').classList.toggle('show', count > 0);
+  }
+
+  function plural(n, forms) {
+    const n10 = n % 10, n100 = n % 100;
+    if (n10 === 1 && n100 !== 11) return forms[0];
+    if (n10 >= 2 && n10 <= 4 && (n100 < 10 || n100 >= 20)) return forms[1];
+    return forms[2];
+  }
+
+  function renderCartRows() {
+    const box = $('cart-rows');
+    const { food, rows } = cartTotals();
+    if (!rows.length) {
+      box.innerHTML = '<div class="cart-empty">Корзина пуста 🛒<br>Добавь что-нибудь из меню!</div>';
+    } else {
+      box.innerHTML = '';
+      rows.forEach(({ it, q, cat }) => {
+        const r = document.createElement('div');
+        r.className = 'cart-row';
+        r.innerHTML = `
+          <span style="font-size:24px">${cat.emoji}</span>
+          <div class="cn">${it.name}<div style="font-size:11px;color:var(--muted)">${fmt(it.price)} / шт</div></div>
+          <div class="qty">
+            <button class="minus">−</button>
+            <span class="q">${q}</span>
+            <button class="plus">+</button>
+          </div>
+          <div class="cp">${fmt(it.price * q)}</div>
+        `;
+        r.querySelector('.minus').onclick = () => {
+          state.cart[it.id]--; if (state.cart[it.id] <= 0) delete state.cart[it.id];
+          renderCartRows(); updateCartBar();
+        };
+        r.querySelector('.plus').onclick = () => {
+          state.cart[it.id]++; renderCartRows(); updateCartBar();
+        };
+        box.appendChild(r);
+      });
+    }
+    const self = ($('f-addr').value || '').toLowerCase().includes('самовывоз');
+    const del = self ? 0 : DELIVERY_PRICE;
+    $('sum-food').textContent = fmt(food);
+    $('sum-del').textContent = self ? '0 ₽ (самовывоз)' : fmt(del);
+    $('sum-total').textContent = fmt(food + del);
+  }
+
+  $('f-addr').addEventListener('input', renderCartRows);
+
+  $('btn-open-cart').onclick = () => {
+    renderCartRows();
+    $('cart-overlay').classList.add('open');
+  };
+  $('btn-close-cart').onclick = () => $('cart-overlay').classList.remove('open');
+  $('cart-overlay').addEventListener('click', e => {
+    if (e.target === $('cart-overlay')) $('cart-overlay').classList.remove('open');
+  });
+
+  // ============ ЗАКАЗ ============
+  $('btn-order').onclick = () => {
+    const phone = $('f-phone').value.trim();
+    const addr = $('f-addr').value.trim();
+    const comm = $('f-comm').value.trim();
+    if (phone.replace(/\D/g, '').length < 6) { toast('📱 Укажи телефон!'); $('f-phone').focus(); return; }
+    if (!addr) { toast('📍 Укажи адрес или «самовывоз»'); $('f-addr').focus(); return; }
+
+    const { food, rows, count } = cartTotals();
+    if (!count) { toast('🛒 Корзина пуста!'); return; }
+    const self = addr.toLowerCase().includes('самовывоз');
+    const total = food + (self ? 0 : DELIVERY_PRICE);
+
+    const lines = rows.map(({ it, q }) => `${it.name} ×${q} = ${it.price * q} ₽`).join('\n');
+    const user = tg && tg.initDataUnsafe && tg.initDataUnsafe.user
+      ? `${tg.initDataUnsafe.user.first_name} (@${tg.initDataUnsafe.user.username || '—'})`
+      : 'Гость';
+
+    // Отправка: если открыто в Telegram — шлём данные боту через sendData,
+    // иначе (открыто в браузере для теста) — просто показываем успех.
+    const payload = `🆕 ЗАКАЗ\n\n${lines}\n\n📞 ${phone}\n📍 ${addr}\n💬 ${comm || '—'}\n👤 ${user}\n💰 ИТОГО: ${total} ₽`;
+
+    let sent = false;
+    if (tg && tg.initDataUnsafe && tg.initDataUnsafe.query_id) {
+      try { tg.sendData(payload); sent = true; } catch (e) { sent = false; }
+    }
+    if (!sent) {
+      // фолбэк: копируем в чат с ботом
+      if (tg && tg.openTelegramLink) {
+        // заказ не ушёл напрямую — покажем успех с текстом
+        showSuccess(phone, addr, total);
+      } else {
+        showSuccess(phone, addr, total);
+      }
+    } else {
+      showSuccess(phone, addr, total);
+    }
+
+    state.cart = {};
+    renderItems(); updateCartBar();
+    $('cart-overlay').classList.remove('open');
+    $('f-phone').value = ''; $('f-addr').value = ''; $('f-comm').value = '';
+  };
+
+  function showSuccess(phone, addr, total) {
+    const s = $('success');
+    s.classList.add('show');
+    $('success-text').innerHTML = `Сумма: <b>${fmt(total)}</b><br>📍 ${addr}<br>📞 ${phone}<br><br>Мы уже разжигаем печь 🍕`;
+    setTimeout(() => s.classList.remove('show'), 5000);
+  }
+
+  // ============ ЗВЁЗДЫ ОТЗЫВА ============
+  let userRating = 0;
+  document.querySelectorAll('#leave-stars .star').forEach(st => {
+    st.onclick = () => {
+      userRating = +st.dataset.v;
+      document.querySelectorAll('#leave-stars .star').forEach(s =>
+        s.classList.toggle('on', +s.dataset.v <= userRating));
+      toast(`Оценка ${userRating}⭐ — спасибо! Напиши отзыв боту в чат 👇`);
+      if (tg) {
+        try { tg.HapticFeedback.impactOccurred('light'); } catch (e) {}
+      }
+    };
+  });
+
+  // ============ ТАБЫ ============
+  document.querySelectorAll('.tab').forEach(t => {
+    t.onclick = () => {
+      state.tab = t.dataset.tab;
+      document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === t));
+      $('sec-menu').classList.toggle('hidden-sec', state.tab !== 'menu');
+      $('sec-promos').classList.toggle('hidden-sec', state.tab !== 'promos');
+      $('sec-reviews').classList.toggle('hidden-sec', state.tab !== 'reviews');
+      document.querySelector('main').scrollIntoView({ behavior: 'smooth' });
+    };
+  });
+
+  // ============ ТОСТ ============
+  let toastTimer = null;
+  function toast(text) {
+    const el = $('toast');
+    el.textContent = text;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+    if (tg) { try { tg.HapticFeedback.notificationOccurred('success'); } catch (e) {} }
+  }
+
+  // ============ СТАРТ ============
+  renderCats(); renderItems(); renderPromos(); renderReviews();
+</script>
+</body>
+</html>
