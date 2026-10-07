@@ -54,6 +54,40 @@
 
   main { position: relative; z-index: 1; max-width: 560px; margin: 0 auto; padding: 0 16px; }
 
+  /* ====== ДЕСКТОП-ВЕРСИЯ ====== */
+  @media (min-width: 760px) {
+    body { padding-bottom: 130px; }
+    main { max-width: 960px; }
+    header { padding-top: 48px; }
+    h1 { font-size: 44px; }
+    .sub { font-size: 15px; }
+    .chips .chip { font-size: 12.5px; padding: 9px 16px; }
+    .cats { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
+    .cat { padding: 24px 10px 18px; }
+    .cat .ic { font-size: 40px; }
+    .cat .nm { font-size: 13.5px; }
+    .items { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .item { padding: 18px; }
+    .item .emoji { width: 74px; height: 74px; font-size: 42px; }
+    .item .info .name { font-size: 17px; }
+    .item .info .desc { font-size: 13px; }
+    .item .price { font-size: 17px; }
+    .item .add { width: 50px; height: 50px; font-size: 28px; }
+    .promo { padding: 22px 26px; }
+    .promo .pt { font-size: 17px; }
+    .promo .pd { font-size: 14px; }
+    #cart-sheet { border-radius: 26px 26px 0 0; padding: 30px 30px calc(28px + env(safe-area-inset-bottom)); }
+    .cart-row { padding: 16px 20px; }
+    .section-title { font-size: 22px; padding: 0; }
+    /* на десктопе — ховер-эффекты вместо тапа */
+    .cat:hover { transform: translateY(-3px); border-color: rgba(255,201,77,.45); box-shadow: var(--glow-gold); }
+    .item:hover { border-color: rgba(255,201,77,.35); transform: translateY(-2px); }
+    .item .add:hover { filter: brightness(1.12); transform: scale(1.05); }
+    .promo:hover .pt { color: #ffdf8e; }
+    .btn-order:hover, .btn-main:hover { filter: brightness(1.12); }
+    .qty button:hover { background: rgba(255,201,77,.25); }
+  }
+
   /* ====== ШАПКА ====== */
   header {
     padding: 26px 4px 18px;
